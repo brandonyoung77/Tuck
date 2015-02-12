@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1"> 
+<script>
+var Story = "SagaOfTuck";
+var Chapter = 1;
+var ChapterObj;
+
+function parseArgs(val) {
+    var result = "",
+        tmp = [];
+    location.search
+    //.replace ( "?", "" ) 
+    // this is better, there might be a question mark inside
+    .substr(1)
+        .split("&")
+        .forEach(function (item) {
+        tmp = item.split("=");
+        if (tmp[0] === val) result = decodeURIComponent(tmp[1]);
+    });
+    return result;
+}
+
+
+function httpGetTuckChapter(Story,Chapter)
+{
+    var xmlHttp = null;
+	var theUrl = "http://brandonyoung77.twilightparadox.com/Tuck/RESTTuck.php?Story=" + Story + "&Current=" + Chapter.toString();
+    xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", theUrl, false );
+    xmlHttp.send( null );
+    return xmlHttp.responseText;
+}
+
+function loadChapter(story,Chapter) 
+{
+	ChapterObj = JSON.parse(httpGetTuckChapter(story,Chapter));
+	
+	document.title = "Chapter " + ChapterObj.Current + " " + ChapterObj.ChapterTitle;
+	//HTML encode
+	var safeString = ChapterObj.ChapterText.replace(/\&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/\s*\n\s*\"/g, "<p>&quot;").replace(/\s*\n\s*\*/g, "<p>*");
+	ChapterObj.ChapterText = safeString;
+	
+	//Switch out newlines
+	var newStr = ChapterObj.ChapterText.replace(/(\r\n\r\n|\r\r|\n\n)/g, '<p>');
+    ChapterObj.ChapterText = newStr;
+	
+	document.getElementById("title").innerHTML = ChapterObj.ChapterTitle;
+	document.getElementById("chapter").innerHTML = ChapterObj.ChapterText;
+	document.getElementById("chapter").scrollTop = 0;
+}
+
+
+function loadLinks()
+{
+	var indexDiv = document.getElementById("index");
+	indexDiv.innerHTML = "";
+	
+	for (i = 1; i <= ChapterObj.TotalChapters; i++) 
+	{ 
+		var indexLinkdiv = document.createElement('div');
+		var chapterlink = document.createElement('a');
+		chapterlink.setAttribute("href","?Story=" + Story + "&Chapter=" + i.toString());
+		chapterlink.onclick = function() { navigateLinks(Story,i);event.preventDefault();}
+		chapterlink.innerHTML = i;
+		indexLinkdiv.appendChild(chapterlink);
+		indexDiv.appendChild(indexLinkdiv);
+	}	
+}
+
+function navigateLinks(Story,NewChapter)
+{
+	Chapter = parseInt(NewChapter);
+	loadChapter(Story,NewChapter);	
+	
+	var previousDiv = document.getElementById("previous");
+	previousDiv.innerHTML = ""
+	
+	var nextDiv = document.getElementById("next");
+	nextDiv.innerHTML = "";
+
+	if (Chapter > 1)
+	{
+		
+		var chapterlink = document.createElement('a');
+		chapterlink.setAttribute("href","?Story=" + Story + "&Chapter=" + (Chapter-1).toString());
+		chapterlink.onclick = function() { navigateLinks(Story,(Chapter-1));event.preventDefault();}
+		chapterlink.innerHTML = "Previous";
+		previousDiv.appendChild(chapterlink);
+	}
+	
+	if (Chapter < ChapterObj.TotalChapters)
+	{
+		var chapterlink = document.createElement('a');
+		chapterlink.setAttribute("href","?Story=" + Story + "&Chapter=" + (Chapter+1).toString());
+		chapterlink.onclick = function() { navigateLinks(Story,(Chapter+1));event.preventDefault();}
+		chapterlink.innerHTML = "Next";
+		nextDiv.appendChild(chapterlink);
+	}
+	var stateObj = { Chapter: Chapter };
+	history.pushState(stateObj, Story, window.location.pathname + "?Story=" + Story + "&Chapter=" + Chapter);
+	window.scrollTo(0,0);
+}
+
+function TableOfContents(story){
+	var xmlHttp = null;
+	var theUrl = "http://brandonyoung77.twilightparadox.com/Tuck/RESTTuck.php?Story=" + Story;
+    xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", theUrl, false );
+    xmlHttp.send( null );
+    tableOfContents = JSON.parse(xmlHttp.responseText);
+	
+	var mainDiv = document.getElementById("chapter");
+	for (i = 1; i <= tableOfContents.TotalChapters; i++) 
+	{ 
+		var indexLinkdiv = document.createElement('div');
+		var chapterlink = document.createElement('a');
+		chapterlink.setAttribute("href","?Story=" + Story + "&Chapter=" + i.toString());
+		chapterlink.innerHTML = i.toString() + ": "  + tableOfContents.Chapterlist[i];
+		indexLinkdiv.appendChild(chapterlink);
+		mainDiv.appendChild(indexLinkdiv);
+	}
+	
+
+}
+
+window.onload = function() {
+	if (location.search)
+	{
+		StoryArg = parseArgs("Story");
+		if (StoryArg != "")
+			Story=StoryArg;
+		ChapterArg = parseArgs("Chapter");
+		if(ChapterArg != "")
+			Chapter=parseInt(ChapterArg)
+	}
+	if (StoryArg != "" && ChapterArg && ChapterArg != "")
+	{
+		navigateLinks(Story,Chapter);
+		loadLinks();
+	}
+	else if ((StoryArg != "") && (ChapterArg == ""))
+	{
+		TableOfContents(StoryArg);
+	}
+}
+</script>
+<link rel='stylesheet' type='text/css' href='tuck.css' />
+</head>
+<body>
+	<nav>
+	<div class="index" id="index"></div>
+	</nav>
+	<header>
+	<div class="title" id="title"></div>	
+	<nav>
+	<div class="previous" id="previous"/></div>
+	<div class="next" id="next"/> </div>
+	</nav>
+	</header>	
+	<article>
+	<div class="chapter" id="chapter"></div>
+	</article>
+</body>
+</html>
