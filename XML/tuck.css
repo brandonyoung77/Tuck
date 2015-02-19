@@ -1,0 +1,55 @@
+body
+{
+	background-color: #000033;
+	color: #CCCCCC;	
+	font-family:verdana, helvetica, arial, sans-serif;
+}
+
+a:link { color: #0099FF; }
+a:visited { color: #00CC00; }
+a:active { color:  #999999; }
+
+div.title
+{
+	top:5px;
+	text-align: center;
+}
+
+div.previous
+{
+	position:fixed;
+	left:50px;
+	top:5px;
+}
+div.next
+{
+	position:fixed;
+	top:5px;
+	right:50px;
+}
+
+div.chapter
+{
+	overflow:auto;
+	position:fixed;
+	left:50px;
+	top:30px;
+	right:0px;
+	bottom:0px;
+	white-space: pre-wrap;       /* css-3 */
+ 	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+	white-space: -pre-wrap;      /* Opera 4-6 */
+	white-space: -o-pre-wrap;    /* Opera 7 */
+	word-wrap: break-word;       /* Internet Explorer 5.5+ */
+
+}
+
+div.index
+{
+	overflow: auto;
+	position:fixed;
+	left:0px;
+	top:0px;
+	width:50px;
+	height:100%;
+}
